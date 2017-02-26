@@ -12,10 +12,10 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 [image1]: ./output_images/exampleTrainingImages.jpg
-[image2]: ./examples/carHogFeatures.jpg
-[image3]: ./examples/noncarHogFeatures.jpg
-[image4]: ./examples/carFeatureVector.jpg
-[image5]: ./examples/noncarFeatureVector.jpg
+[image2]: ./output_images/carHogFeatures.jpg
+[image3]: ./output_images/noncarHogFeatures.jpg
+[image4]: ./output_images/carFeatureVector.jpg
+[image5]: ./output_images/noncarFeatureVector.jpg
 
 [image6]: ./examples/sliding_windows.jpg
 [image7]: ./examples/sliding_window.jpg
