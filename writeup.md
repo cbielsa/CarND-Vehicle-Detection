@@ -38,7 +38,7 @@ You're reading it!
 
 ####1. Explain how (and identify where in your code) you extracted HOG features from the training images.
 
-The code for image features extraction is in Section 1.1 of IPython notebook 'CarND-Vehicle-Detection.ipynb' (henceforth "the Notebook").
+The code for image features extraction is in Section 1.1 of IPython notebook `CarND-Vehicle-Detection.ipynb` (henceforth `the Notebook`).
 
 *Functions overview*
  * Function `readImage` takes an input an image file path and reads the image as RGB with pixel color channel intensities of type np.uint8 in the [0,255] range, regardless of whether the image is in jpg or png format.
@@ -52,7 +52,7 @@ The code for image features extraction is in Section 1.1 of IPython notebook 'Ca
 
 I collect `vehicle images from` two sources: the [GTI Vehicle database](https://www.gti.ssr.upm.es/data/Vehicle_database.html) and the [KITTI Vision Benchmark Suite](http://www.cvlibs.net/datasets/kitti/eval_tracking.php). Images from the former are extracted from short video clips, hence consecutive images are very similar to each other. Consecutive images from the latter, however, correspond to different vehicles or perspectives.
 
-The dataset collection and training-test split is done in Section 3.1 of the Notebook.
+The dataset collection and training-test split is done in `Section 3.1` of the Notebook.
 
 I choose to split the dataset in 85% training and 15% test sets. For GTI images, I assign the first 85% files to the training set, and the remainder to the dataset. This way I avoid the problem of having very similar images in the training and test sets, which would have resulted on unreliably high test accuracy. For KITTI images, I randomize the split.
 
@@ -82,15 +82,37 @@ The plots below show the combined feature vectors for the same example vehicle a
 ![alt text][image4]
 ![alt text][image5]
 
-The y-axes are in logarithmic scale and, clearly, features have very different scales (spatial features are in [0,255] range, color histogram features can as large as order 1000, while HOG features are typically smaller than 1). Therefore, normalizatio will be performed at a later step.
+The y-axes are in logarithmic scale and, clearly, features have very different scales (spatial features are in `[0,255]` range, color histogram features can as large as order `1000`, while HOG features are typically smaller than `1`). Therefore, normalization will be performed at a later step.
 
 ####2. Explain how you settled on your final choice of HOG parameters.
 
-I tried various combinations of parameters and...
+`Section 4.2` in the Notebook contains the final choice of feature parameters, which is a trade-off between performance (as measured by classification accuracy in the test dataset) and processing time. In the final processing pipeline:
+  * Images are converted to `HSV` color space.
+  * HOG features are generated for channels S and V, but not for channel H.
+  * For HOG feature extractions, `9 orientation bins`, `8 pixels per cell` and `2 cells per block` are used.
+  * For spatial binning features, images in HSV are resized to `24x24 pixels`.
+  * For histogram color features, `32 bins` are used.
+  
+This results in a feature vector size of `5352`, significantly smaller than the original image size of `64*64*3 = 12,288`.
+
+For the exploration of color spaces, I used `Section 4.1` in the Notebook with a variety of car and non-car images. The `HSV` color space seems to be the one where car and non-car HOG features are better differentiated, particulary in the Saturation and Value channels.
+
+To inform my choice of parameters for the HOG, spatial bin and color histogram feature selection, I used in the first place the experience gained from the exercises and experimentation in the Udacity nanodegree. For HOG parametrization, I also used HOG visualizations in `Section 4.1` of the Notebook.
+
+The ultimate objective of the project is to implement a pipeline capable of reliably identifying vehicles in a video stream and, to a lesser extent, to do so in contained computational time. Therefore, I used classification accuracy of the trained SVM in the test set as an initial proxy for pipeline performance.
+
+The selected parametrization achieved 99% test accuracy with a moderate feature vector size. No other color space or parametrization resulted in better test accuracy with a similar number of parameters.
+
+And although based only on test accuracy and performance of the feature selection/classifier in the test images, one by one, I initially decided not to use spatial bin features --thereby further reducing the number of features--, I later decided to introduce spatial features to improve the performance of the *dynamic* pipeline.
+
+As it turns out, although the linear SVM classifier trained without spatial features returns fewer false positives, it also identifies fewer of the windows actually containing vehicles, and so in the dynamic context of the final pipeline where hotmaps are constructed taking into account detections in past recent frames, more false positives with more real detections (with spatial features) proved preferrable to fewer false positives with fewer real detections (without spatial features).
 
 ####3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
-I trained a linear SVM using...
+  * In `Section 4.2` of the Notebook, feature extraction is performed for the training and test datasets.
+  * In `Section 4.3.`, normalization parameters are calculated based exclusively on the training dataset. That same normalization is then applied to both the training and the test datasets. Note that it is important to calculate the normalization parameters without the test set to avoid data leakage and ensure that test accuracy provides a performance metric realistic when the classifier is applied to real-world data. For the normalization, I use ´sklearn.preprocessing.StandardScaler()´.
+  * Next, in ´Section 4.4´ I randomly shuffle the normalized training dataset. The same shuffling is indeed applied to features vectors and labels.
+  * Finally, `in Section 4.5` I construct and train a SVM classifier with a linear kernel on the shuffled normalized features of the training set. I use `sklearn.svm.linearSVC` with `C=1e-4` and `dual=False`. That choice of the misclassification penalty `C` resulted in a maximum test accuracy of 98.8%, by reducing overfitting relative to the default value `C=1`. On the other hand, the [scikit](http://scikit-learn.org/stable/modules/generated/sklearn.svm.LinearSVC.html) documentation recommends to solve the primal optimization problem when n_samples>n_features, as it is our case (`n_training_samples = 15,067`, `n_features = 5,352`).
 
 ###Sliding Window Search
 
