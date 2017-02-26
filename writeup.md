@@ -16,10 +16,10 @@ The goals / steps of this project are the following:
 [image3]: ./output_images/noncarHogFeatures.jpg
 [image4]: ./output_images/carFeatureVector.jpg
 [image5]: ./output_images/noncarFeatureVector.jpg
+[image6]: ./output_images/search_windows.jpg
+[image7]: ./output_images/on_windows.jpg
+[image8]: ./test_images/test1.jpg
 
-[image6]: ./examples/sliding_windows.jpg
-[image7]: ./examples/sliding_window.jpg
-[image8]: ./examples/bboxes_and_heat.png
 [image9]: ./examples/labels_map.png
 [image10]: ./examples/output_bboxes.png
 [video1]: ./project_video.mp4
@@ -101,7 +101,7 @@ To inform my choice of parameters for the HOG, spatial bin and color histogram f
 
 The ultimate objective of the project is to implement a pipeline capable of reliably identifying vehicles in a video stream and, to a lesser extent, to do so in contained computational time. Therefore, I used classification accuracy of the trained SVM in the test set as an initial proxy for pipeline performance.
 
-The selected parametrization achieved 99% test accuracy with a moderate feature vector size. No other color space or parametrization resulted in better test accuracy with a similar number of parameters.
+The selected parametrization achieved ~99% test accuracy with a moderate feature vector size. No other color space or parametrization resulted in better test accuracy with a similar number of parameters.
 
 And although based only on test accuracy and performance of the feature selection/classifier in the test images, one by one, I initially decided not to use spatial bin features --thereby further reducing the number of features--, I later decided to introduce spatial features to improve the performance of the *dynamic* pipeline.
 
@@ -111,16 +111,28 @@ As it turns out, although the linear SVM classifier trained without spatial feat
 
   * In `Section 4.2` of the Notebook, feature extraction is performed for the training and test datasets.
   * In `Section 4.3.`, normalization parameters are calculated based exclusively on the training dataset. That same normalization is then applied to both the training and the test datasets. Note that it is important to calculate the normalization parameters without the test set to avoid data leakage and ensure that test accuracy provides a performance metric realistic when the classifier is applied to real-world data. For the normalization, I use ´sklearn.preprocessing.StandardScaler()´.
-  * Next, in ´Section 4.4´ I randomly shuffle the normalized training dataset. The same shuffling is indeed applied to features vectors and labels.
-  * Finally, `in Section 4.5` I construct and train a SVM classifier with a linear kernel on the shuffled normalized features of the training set. I use `sklearn.svm.linearSVC` with `C=1e-4` and `dual=False`. That choice of the misclassification penalty `C` resulted in a maximum test accuracy of 98.8%, by reducing overfitting relative to the default value `C=1`. On the other hand, the [scikit](http://scikit-learn.org/stable/modules/generated/sklearn.svm.LinearSVC.html) documentation recommends to solve the primal optimization problem when n_samples>n_features, as it is our case (`n_training_samples = 15,067`, `n_features = 5,352`).
+  * Next, in `Section 4.4` I randomly shuffle the normalized training dataset. The same shuffling is indeed applied to features vectors and labels.
+  * Finally, in `Section 4.5` I construct and train a SVM classifier with a linear kernel on the shuffled normalized features of the training set. I use `sklearn.svm.linearSVC` with `C=1e-4` and `dual=False`. That choice of the misclassification penalty `C` resulted in a maximum test accuracy of 98.8%, by reducing overfitting relative to the default value `C=1`. On the other hand, the [scikit](http://scikit-learn.org/stable/modules/generated/sklearn.svm.LinearSVC.html) documentation recommends to solve the primal optimization problem when n_samples>n_features, as it is our case (`n_training_samples = 15,067`, `n_features = 5,352`).
 
 ###Sliding Window Search
 
 ####1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
 
-I decided to search random window positions at random scales all over the image and came up with this (ok just kidding I didn't actually ;):
+`Section 2.2` of the Notebook implements all functions related to sliding window search.
 
-![alt text][image3]
+*Functions overview*
+  * Function `draw_boxes` draws the input boxes on the input image.
+  * Function `slide_window` generates a list of search windows of a single given size within a given image region and with given overlap.
+  * Function `slide_windows_multiScale` generates a list of windows at different scales by calling `slide_window` for different window sizes and overlap values. This is the function called at each processing cycle to generate search windows.
+  * Function `search_windows` takes an input image (the video frame) and a list of search windows, and returns a list with the windows likely to contain a vehicle. To do this, the function loops over the input search windows, and for each of them: resizes the part of the image contained in the window to 64x64 pixels, extracts features, normalizes them, performs inference with the linear SVM classifier and, if the window is labeled as containing a vehicle, adds that windows the the output list. Indeed, the feature extraction and normalization methods are identical to those used to train the classifier.
+  * Function `createHeatmap` takes as input a list of windows thought to contain vehicles (possibly collected over the last `iNumFramesTracked` cycles) and generates a detection heatmap with the same width and height as the video frame. The most likely a pixel is to belong to a vehicle, the higher its value in the heatmap.
+  * Function `apply_threshold` applies an input threshold to the input heatmap, such that elements with a value smaller than the threshold are set to zero. It also clips values to the [0,255] range, so that the heatmap can be plotted with plt.imshow().
+  * Function `compute_and_draw_labeled_bboxes` takes as input the original image, a thresholded detection heatmap, and size and height-to-width window validity thresholds, and returns the original images with detection boundary boxes drawn on it. To do this, it first isolates each separated region in the heatmap using function `scipy.ndimage.measurements.label.labels()`, it then defines a boundary box for each region based on min and max x- and y-values, and finally, it draws the boundary boxes with dimensions and height-to-width ratio within expected thresholds, to help filter out false positives.
+
+The following figures show the original test image `test1.jpg`, followed by the same image with all search windows returned by `slide_windows_multiScale` drawn on it, with a different color for each set of window sizes:
+
+![alt text][image8]
+![alt text][image6]
 
 ####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
