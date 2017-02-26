@@ -12,12 +12,16 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 [image1]: ./output_images/exampleTrainingImages.jpg
-[image2]: ./examples/HOG_example.jpg
-[image3]: ./examples/sliding_windows.jpg
-[image4]: ./examples/sliding_window.jpg
-[image5]: ./examples/bboxes_and_heat.png
-[image6]: ./examples/labels_map.png
-[image7]: ./examples/output_bboxes.png
+[image2]: ./examples/carHogFeatures.jpg
+[image3]: ./examples/noncarHogFeatures.jpg
+[image4]: ./examples/carFeatureVector.jpg
+[image5]: ./examples/noncarFeatureVector.jpg
+
+[image6]: ./examples/sliding_windows.jpg
+[image7]: ./examples/sliding_window.jpg
+[image8]: ./examples/bboxes_and_heat.png
+[image9]: ./examples/labels_map.png
+[image10]: ./examples/output_bboxes.png
 [video1]: ./project_video.mp4
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
@@ -42,7 +46,7 @@ The code for image features extraction is in Section 1.1 of IPython notebook 'Ca
  * Function `bin_spatial_features` transforms an image to a given pixel size and returns the intensities as a feature vector.
  * Function `color_hist_features` computes color histogram features for a given number of bins, in the input image color space.
  * Function `get_hog_features` computes a HOG features vector for given input parameterization, optionally returning as well a visualization. The low level computations are done by function `skimage.feature.hog`.
- * Function ´extract_features_singleImage´ is the higher-level feature-extraction function. It takes as input an RGB image and returns a feature vector including spatial, color histogram and HOG features. In particular, note that it is possible to generate HOG features for one, two or three color channels, depending on user input. The tunning selected for the processing pipeline is detailed in point 2 of this writeup.
+ * Function `extract_features_singleImage` is the highest-level feature-extraction function. It takes as input an RGB image and returns a feature vector including spatial, color histogram and HOG features. In particular, note that it is possible to generate HOG features for one, two or three color channels, depending on user input. The tuning selected for the processing pipeline is detailed in point 2 of this writeup.
 
 *The dataset*
 
@@ -62,14 +66,23 @@ A random selection of images of either class are shown below:
 
 ![alt text][image1]
 
+Since the vehicle detection pipeline uses a simple linear SVM as classifier (more on this later), the selection of a rich-enough feature space is fundamental for overall performance. This is in contrast to a deep CNN, whose initial layers can be trained to satisfactory perform feature extraction from raw RGB pixel intensities (as done in e.g. the [Behavioral Cloning project](https://github.com/cbielsa/CarND-BehavioralCloning-P3)).
 
+I first explored color spaces in search for the space where images containing vehicles could be better differentiated. I also extracted HOG features with a variety of tunings (tunable parameters including number of orientation bins, pixels per cell, cells per block and color channels passed to the HOG feature extractor).
 
-I then explored different color spaces and different `skimage.hog()` parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`).  I grabbed random images from each of the two classes and displayed them to get a feel for what the `skimage.hog()` output looks like.
-
-Here is an example using the `YCrCb` color space and HOG parameters of `orientations=8`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
-
+The figures below show color channels and HOG feature visualization for each channel for an example vehicle and non-vehicle image. This examples correspond to HSV color space, with HOG parameters of `orientations=9`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
 
 ![alt text][image2]
+![alt text][image3]
+
+In addition to HOG features, color histograms can be used to provide color information, while spatial bin features provide both color and spatial context.
+
+The plots below show the combined feature vectors for the same example vehicle and non-vehicle images displayed before, as returned by function `extract_features_singleImage`. Parameter selection is identical to the one used in the final processing pipeline. The order of the features is: first, spatial features; then, color histogram features; and, finally HOG features.
+
+![alt text][image4]
+![alt text][image5]
+
+The y-axes are in logarithmic scale and, clearly, features have very different scales (spatial features are in [0,255] range, color histogram features can as large as order 1000, while HOG features are typically smaller than 1). Therefore, normalizatio will be performed at a later step.
 
 ####2. Explain how you settled on your final choice of HOG parameters.
 
