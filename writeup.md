@@ -18,7 +18,7 @@ The goals / steps of this project are the following:
 [image5]: ./output_images/noncarFeatureVector.jpg
 [image6]: ./output_images/search_windows.jpg
 [image7]: ./output_images/on_windows.jpg
-[image8]: ./test_images/test1.jpg
+[image8]: ./output_images/original_image.jpg
 
 [image9]: ./examples/labels_map.png
 [image10]: ./examples/output_bboxes.png
@@ -133,6 +133,18 @@ The following figures show the original test image `test1.jpg`, followed by the 
 
 ![alt text][image8]
 ![alt text][image6]
+
+As seen in the image above, for the processing of the project video, I implemented sliding windows of three sizes:
+  * 128x128 pixels, with overlap 0.8.
+  * 96x96 pixels, with overlap 0.9.
+  * 64x64 pixels, with overlap 0.8.
+  
+This amounted to 1047 windows searched per image.
+Originally, I also implemented larger windows on the bottom-most section of the image, but they proved to be of no use in the project video and so I decided to remove them to reduce processing time. For a general-purpose pipeline capable to detect vehicles in the near vicinities, however, I would have included windows of 192x192 or 256x256 pixels in the bottom-most section of the image.
+
+As per the choice of overlaps, I simply increased them until the detection algorithm proved to work well enough in all the test images. The results on the test images are indeed encouraging, with e.g. 70 windows containing (parts of) a vehicle detected in `test1.jpg`, as shown below:
+
+![alt text][image7]
 
 ####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
