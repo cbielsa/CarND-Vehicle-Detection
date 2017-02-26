@@ -1,21 +1,17 @@
-##Writeup Template
-###You can use this file as a template for your writeup if you want to submit it as a markdown file, but feel free to use some other method and submit a pdf if you prefer.
-
+##Writeup for the Vehicle Detection project
 ---
-
-**Vehicle Detection Project**
 
 The goals / steps of this project are the following:
 
-* Perform a Histogram of Oriented Gradients (HOG) feature extraction on a labeled training set of images and train a classifier Linear SVM classifier
-* Optionally, you can also apply a color transform and append binned color features, as well as histograms of color, to your HOG feature vector. 
+* Perform a Histogram of Oriented Gradients (HOG) feature extraction on a labeled training set of images and train a Linear SVM classifier,
+* Optionally, you can also apply a color transform and append binned color features, as well as histograms of color, to your HOG feature vector.
 * Note: for those first two steps don't forget to normalize your features and randomize a selection for training and testing.
 * Implement a sliding-window technique and use your trained classifier to search for vehicles in images.
 * Run your pipeline on a video stream (start with the test_video.mp4 and later implement on full project_video.mp4) and create a heat map of recurring detections frame by frame to reject outliers and follow detected vehicles.
 * Estimate a bounding box for vehicles detected.
 
 [//]: # (Image References)
-[image1]: ./examples/car_not_car.png
+[image1]: ./output_images/exampleTrainingImages.jpg
 [image2]: ./examples/HOG_example.jpg
 [image3]: ./examples/sliding_windows.jpg
 [image4]: ./examples/sliding_window.jpg
@@ -30,7 +26,7 @@ The goals / steps of this project are the following:
 ---
 ###Writeup / README
 
-####1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.  [Here](https://github.com/udacity/CarND-Vehicle-Detection/blob/master/writeup_template.md) is a template writeup for this project you can use as a guide and a starting point.  
+####1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.
 
 You're reading it!
 
@@ -38,11 +34,35 @@ You're reading it!
 
 ####1. Explain how (and identify where in your code) you extracted HOG features from the training images.
 
-The code for this step is contained in the first code cell of the IPython notebook (or in lines # through # of the file called `some_file.py`).  
+The code for image features extraction is in Section 1.1 of IPython notebook 'CarND-Vehicle-Detection.ipynb' (henceforth "the Notebook").
 
-I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
+*Functions overview*
+ * Function `readImage` takes an input an image file path and reads the image as RGB with pixel color channel intensities of type np.uint8 in the [0,255] range, regardless of whether the image is in jpg or png format.
+ * Function `transform_colorSpace` transforms an RGB image to another color space.
+ * Function `bin_spatial_features` transforms an image to a given pixel size and returns the intensities as a feature vector.
+ * Function `color_hist_features` computes color histogram features for a given number of bins, in the input image color space.
+ * Function `get_hog_features` computes a HOG features vector for given input parameterization, optionally returning as well a visualization. The low level computations are done by function `skimage.feature.hog`.
+ * Function ´extract_features_singleImage´ is the higher-level feature-extraction function. It takes as input an RGB image and returns a feature vector including spatial, color histogram and HOG features. In particular, note that it is possible to generate HOG features for one, two or three color channels, depending on user input. The tunning selected for the processing pipeline is detailed in point 2 of this writeup.
+
+*The dataset*
+
+I collect `vehicle images from` two sources: the [GTI Vehicle database](https://www.gti.ssr.upm.es/data/Vehicle_database.html) and the [KITTI Vision Benchmark Suite](http://www.cvlibs.net/datasets/kitti/eval_tracking.php). Images from the former are extracted from short video clips, hence consecutive images are very similar to each other. Consecutive images from the latter, however, correspond to different vehicles or perspectives.
+
+The dataset collection and training-test split is done in Section 3.1 of the Notebook.
+
+I choose to split the dataset in 85% training and 15% test sets. For GTI images, I assign the first 85% files to the training set, and the remainder to the dataset. This way I avoid the problem of having very similar images in the training and test sets, which would have resulted on unreliably high test accuracy. For KITTI images, I randomize the split.
+
+I collect `non-vehicle images` from GTI and the "Extras" directory provided by Udacity. In the "Extra" set, consecutive images are also similar to one another, hence I select the first 85% non-vehicle images of both GTI and "Extras" for the training set, and the remainder for the test set.
+
+Next, I assign label `1` to `vehicle images` and `0` to `non-vehicle` images.
+
+There is a total of 15,067 training and 2,693 test images, and both datasets are roughly balanced, with a similar number of images of either class. All images have 64x64 pixels, and I convert intensities to uint8 in range [0,255].
+
+A random selection of images of either class are shown below:
 
 ![alt text][image1]
+
+
 
 I then explored different color spaces and different `skimage.hog()` parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`).  I grabbed random images from each of the two classes and displayed them to get a feel for what the `skimage.hog()` output looks like.
 
