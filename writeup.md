@@ -19,10 +19,11 @@ The goals / steps of this project are the following:
 [image6]: ./output_images/search_windows.jpg
 [image7]: ./output_images/on_windows.jpg
 [image8]: ./output_images/original_image.jpg
-
-[image9]: ./examples/labels_map.png
-[image10]: ./examples/output_bboxes.png
-[video1]: ./project_video.mp4
+[image9]: ./output_images/test_images_processed
+[image10]: ./output_images/pipeline_windows.png
+[image11]: ./output_images/pipeline_heatmap.png
+[image12]: ./output_images/pipeline_labels.png
+[image13]: ./output_images/pipeline_final.png
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
 ###Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
@@ -155,11 +156,14 @@ Ultimately I searched on two scales using YCrCb 3-channel HOG features plus spat
 
 ### Video Implementation
 
-####1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (somewhat wobbly or unstable bounding boxes are ok as long as you are identifying the vehicles most of the time with minimal false positives.)
-Here's a [link to my video result](./project_video.mp4)
+####1. Provide a link to your final video output. Your pipeline should perform reasonably well on the entire project video (somewhat wobbly or unstable bounding boxes are ok as long as you are identifying the vehicles most of the time with minimal false positives.)
+Here's a [link to my video result](./project_video_withVehicleDetection.mp4)
 
 
 ####2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
+
+
+
 
 I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.  
 
