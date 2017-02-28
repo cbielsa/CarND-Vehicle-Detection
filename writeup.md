@@ -147,39 +147,42 @@ As per the choice of overlaps, I simply increased them until the detection algor
 
 ![alt text][image7]
 
-####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
+####2. Show some examples of test images to demonstrate how your pipeline is working. What did you do to optimize the performance of your classifier?
 
-Ultimately I searched on two scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result.  Here are some example images:
+The figure below shows the result of applying `search_windows` to search windows given by `slide_windows_multiScale` in the six test images. Each vehicle is detected in a number of windows and there are no false positives.
 
-![alt text][image4]
+The processes of data pre-processing and feature selection have been already explained at lenght in parts 2 and 3 of the writeup.
+
+![alt text][image9]
+
 ---
 
 ### Video Implementation
 
 ####1. Provide a link to your final video output. Your pipeline should perform reasonably well on the entire project video (somewhat wobbly or unstable bounding boxes are ok as long as you are identifying the vehicles most of the time with minimal false positives.)
-Here's a [link to my video result](./project_video_withVehicleDetection.mp4)
 
+Here's a [link to my video result](./project_video_withVehicleDetection.mp4), also available in [YouTube](https://www.youtube.com/watch?v=i8asBHKSQ4s&feature=youtu.be).
 
 ####2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
 
+`Section 2.3` in the Notebook implements class `Window`, and functions `process_video_config` and `process_video`.
 
+Object `process_video.windows` of class `Window` is used in function `process_video_config` to store the boundary boxes with vehicle detection of the last three cycles.
 
+At each cyle, all the windows returned by `slide_windows_multiScale` are searched for vehicle detections with function `slide_windows_multiScale`. The detected windows are appended to the list of detected windows in the last `iNumFramesTracked` cycles. Parameter `iNumFramesTracked` was set to `3` cycles for the generation of the processing of the project video and the example figures given below.
 
-I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.  
+Next, if after appending the windows with detections in this cycle, the total number of cycles being tracked exceeds `iNumFramesTracked`, the detection windows of the oldest cycle are removed from the list.
 
-Here's an example result showing the heatmap from a series of frames of video, the result of `scipy.ndimage.measurements.label()` and the bounding boxes then overlaid on the last frame of video:
+Then a detection heatmap is generated with function `createHeatmap` from the list of detection windows in the last `iNumFramesTracked` cycle. That heatmap is thresholded such that for all pixels belonging to less than `iHeatmapThreshold` detection windows, the heatmap value is set to zero. Parameter `iHeatmapThreshold` was set to `9` for the generation of the processing of the project video and the example figures given below.
 
-### Here are six frames and their corresponding heatmaps:
+Finally, function `compute_and_draw_labeled_bboxes` is called to identify individual blobs with `scipy.ndimage.measurements.label()`, and the smallest rectangle containing each blob is drawn as a final window provided its dimensions are whithin expected thresholds. For a final window to be within thresholds, its height and width must be at least `50 pixels`, and the height-to-width ratio must be in the `[0.33 to 3.0]` range. This final thresholding sanity check helped reduce the number of false final windows.
 
-![alt text][image5]
+In `Section 6.2.` of the Notebook, I process the test video plotting several intermediate-step figures for each single frame, which provides a lot of visibility on the internal works of the pipeline. Below, I copy those intermediate figures for one of the frames. Note that in the first figure, windows detected in the current cycle are shown in green, while windows detected in the two previous cycles are shown in blue.
 
-### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all six frames:
-![alt text][image6]
-
-### Here the resulting bounding boxes are drawn onto the last frame in the series:
-![alt text][image7]
-
-
+![alt text][image10]
+![alt text][image11]
+![alt text][image12]
+![alt text][image13]
 
 ---
 
