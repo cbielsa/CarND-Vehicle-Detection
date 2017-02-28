@@ -190,5 +190,16 @@ In `Section 6.2.` of the Notebook, I process the test video plotting several int
 
 ####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+I based my initial choice of features in a tradeoff between test accuracy and processing time of the classifier. I was impressed with the close to 99% test accuracy of HOG + color histogram features fed to a simple linear SVM classifier. Performance on the test video, however, showed lots of room for improvement.
 
+Despite the theoretical robustness of HOG features to small image shifts and size changes, the vehicle detector proved very sensitive to search windows size and location. This forced me to introduce a wide range of window sizes and to increase overlap to up to 90%. At the same time, the detector identified certain fence and dry grass areas as vehicles, systematically during several consecutive video frames, which made the filtering of false positives challenging.
+
+I partially aleviated this problem by introducing spatial bin features to the pipeline (wihch greatly increased the number of true and false detections) combined with calculation of heatmaps with windows detected over the last three cycles and an aggressive heatmap threshold (to filter out most false detections). I also added some sanity checks to the final windows to discard too small or elongated windows, unsuited to contain a vehicle.
+
+But even with these improvements, the processed project video continues to display some false positives next to the white car, on the dry grass area on the ride side of the road. And not only is the performance of the pipeline somehow disappointing, but with a processing time of about 5 seconds per frame, the 50 seconds project video requires over an hour of processing, orders of magnitude away from real time processing (even though admittedly, processing time could be improved with parallelization).
+
+Detection could be improved and wobble reduced by expanding the vehicle detection algorihtm to vehicle tracking. If position and velocity are estimated for each vehicle detected in the last cycles, initial guesses of the position of the vehicle in the current cycle are available.
+
+But ultimately, the shortcomings of the HOG+SVM pipeline call for a faster and more powerful detection algorithm, such as [YOLO](https://pjreddie.com/media/files/papers/yolo.pdf) or [SSD](https://arxiv.org/pdf/1512.02325v5.pdf).
+
+I am looking forward to exploring these and similar algorithms in the upcoming weeks. 
