@@ -19,7 +19,7 @@ The goals / steps of this project are the following:
 [image6]: ./output_images/search_windows.jpg
 [image7]: ./output_images/on_windows.jpg
 [image8]: ./output_images/original_image.jpg
-[image9]: ./output_images/test_images_processed
+[image9]: ./output_images/test_images_processed.jpg
 [image10]: ./output_images/pipeline_windows.png
 [image11]: ./output_images/pipeline_heatmap.png
 [image12]: ./output_images/pipeline_labels.png
